@@ -3,7 +3,9 @@ package comptoirs.service;
 import comptoirs.dao.CommandeRepository;
 import comptoirs.dao.LigneRepository;
 import comptoirs.dao.ProduitRepository;
+import comptoirs.entity.Commande;
 import comptoirs.entity.Ligne;
+import comptoirs.entity.Produit;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.Positive;
 import org.springframework.stereotype.Service;
@@ -45,6 +47,16 @@ public class LigneService {
      */
     @Transactional
     Ligne ajouterLigne(Integer commandeNum, Integer produitRef, @Positive int quantite) {
-        throw new UnsupportedOperationException("Cette méthode n'est pas implémentée");
+    	//On vérifide l'existence de la commande et du produit
+    	Produit p = produitDao.findById(produitRef).orElseThrow();
+    	Commande c = commandeDao.findById(commandeNum).orElseThrow();
+    	
+    	if (c.getEnvoyeele() != null) throw new IllegalArgumentException("la commande est déjà envoyé");
+    	if(p.getIndisponible()) throw new IllegalArgumentException("plus assez d'unité en stock");
+    	
+    	Ligne l = new Ligne(c, p, quantite);
+    	p.setUnitesCommandees(p.getUnitesCommandees()+quantite);
+    	ligneDao.save(l);
+    	return l;
     }
 }

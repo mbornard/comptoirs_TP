@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import comptoirs.dao.ProduitRepository;
 import jakarta.validation.ConstraintViolationException;
 
 @SpringBootTest
@@ -23,6 +24,9 @@ class LigneServiceTest {
 
     @Autowired
     LigneService service;
+    
+    @Autowired
+    ProduitRepository produitDao;
 
     @Test
     void onPeutAjouterDesLignesSiPasLivre() {
@@ -36,5 +40,25 @@ class LigneServiceTest {
         assertThrows(ConstraintViolationException.class, 
             () -> service.ajouterLigne(NUMERO_COMMANDE_PAS_LIVREE, REFERENCE_PRODUIT_DISPONIBLE_1, 0),
             "La quantite d'une ligne doit être positive");
+    }
+    @Test
+    void dejaLivre() {
+    	assertThrows(Exception.class, 
+    			() -> service.ajouterLigne(NUMERO_COMMANDE_DEJA_LIVREE, REFERENCE_PRODUIT_DISPONIBLE_1, 2), "on ne peut pas ajouter une ligne à un produit déjà livré");
+
+    }
+    
+    @Test
+    void produitPasEnStock() {
+    	assertThrows(IllegalArgumentException.class,
+    			() -> service.ajouterLigne(NUMERO_COMMANDE_PAS_LIVREE, REFERENCE_PRODUIT_INDISPONIBLE, 1), "on ne peut pas ajouter un produit indisponible");
+    }
+    
+    @Test
+    void actualisationNbUniteCommande(){
+    	var produit = produitDao.findById(REFERENCE_PRODUIT_DISPONIBLE_2).orElseThrow();
+    	var ligne  = service.ajouterLigne(NUMERO_COMMANDE_PAS_LIVREE, REFERENCE_PRODUIT_DISPONIBLE_2, 2);
+    	assertEquals(ligne.getProduit().getUnitesCommandees(), produit.getUnitesCommandees()+2);
+    	
     }
 }

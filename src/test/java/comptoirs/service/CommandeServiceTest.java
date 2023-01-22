@@ -4,7 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import comptoirs.dao.ProduitRepository;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -19,6 +22,9 @@ class CommandeServiceTest {
 
     @Autowired
     private CommandeService service;
+    
+    @Autowired
+    private ProduitRepository produit;
     @Test
     void testCreerCommandePourGrosClient() {
         var commande = service.creerCommande(ID_GROS_CLIENT);
@@ -41,4 +47,19 @@ class CommandeServiceTest {
         assertEquals(VILLE_PETIT_CLIENT, commande.getAdresseLivraison().getVille(),
             "On doit recopier l'adresse du client dans l'adresse de livraison");
     }   
+    @Test
+    void actualisationStock() {
+    	var prod = produit.findById(98).orElseThrow();
+    	int stockBefore = prod.getUnitesEnStock();
+    	service.enregistreExpédition(99998);
+    	prod = produit.findById(98).orElseThrow();
+    	assertEquals(stockBefore-20, prod.getUnitesEnStock(), "le stock doit être actualiser avec 20 unités en moins.");
+    }
+    
+    @Test
+    void testEnregistrementExpedition() {
+    	var c = service.creerCommande(ID_GROS_CLIENT);
+    	c = service.enregistreExpédition(c.getNumero());
+    	assertEquals(LocalDate.now(), c.getEnvoyeele(), "la date doit être la date actuelle");
+    }
 }
